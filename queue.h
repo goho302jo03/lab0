@@ -26,10 +26,12 @@ typedef struct ELE {
 /* Queue structure */
 typedef struct {
     list_ele_t *head; /* Linked list of elements */
-                      /*
-                        You will need to add more fields to this structure
-                        to efficiently implement q_size and q_insert_tail
-                      */
+    list_ele_t *tail;
+    int size;
+    /*
+      You will need to add more fields to this structure
+      to efficiently implement q_size and q_insert_tail
+    */
 } queue_t;
 
 /************** Operations on queue ************************/
@@ -69,7 +71,7 @@ bool q_insert_tail(queue_t *q, char *s);
   Return true if successful.
   Return false if queue is NULL or empty.
   If sp is non-NULL and an element is removed, copy the removed string to *sp
-  (up to a maximum of bufsize-1 characters, plus a null terminator.)
+  (up to a maximum of bufize-1 characters, plus a null terminator.)
   The space used by the list element and the string should be freed.
 */
 bool q_remove_head(queue_t *q, char *sp, size_t bufsize);
