@@ -437,6 +437,9 @@ static bool show_queue(int vlevel)
             e = e->next;
             cnt++;
             ok = ok && !error_check();
+            if (e == q->head) {
+                e = NULL;
+            }
         }
     }
     exception_cancel();

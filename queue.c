@@ -28,12 +28,10 @@ queue_t *q_new()
     /* What if malloc returned NULL? */
     if (q == NULL) {
         return NULL;
-    } else {
-        q->head = NULL;
-        q->tail = NULL;
-        q->size = 0;
-        return q;
     }
+    q->head = NULL;
+    q->size = 0;
+    return q;
 }
 
 /* Free all storage used by queue */
@@ -46,7 +44,8 @@ void q_free(queue_t *q)
     }
     list_ele_t *curr, *prev;
     curr = q->head;
-    while (curr != NULL) {
+    while (q->size) {
+        q->size--;
         prev = curr;
         curr = curr->next;
         free(prev);
@@ -79,10 +78,16 @@ bool q_insert_head(queue_t *q, char *s)
         free(newh);
         return false;
     }
-    newh->next = q->head;
-    q->head = newh;
     if (q->size == 0) {
-        q->tail = newh;
+        q->head = newh;
+        newh->prev = newh;
+        newh->next = newh;
+    } else {
+        newh->prev = q->head->prev;
+        newh->next = q->head;
+        q->head->prev->next = newh;
+        q->head->prev = newh;
+        q->head = newh;
     }
     q->size++;
     return true;
@@ -113,13 +118,16 @@ bool q_insert_tail(queue_t *q, char *s)
         free(newt);
         return false;
     }
-    newt->next = NULL;
     if (q->size == 0) {
         q->head = newt;
+        newt->prev = newt;
+        newt->next = newt;
     } else {
-        q->tail->next = newt;
+        newt->prev = q->head->prev;
+        q->head->prev->next = newt;
+        q->head->prev = newt;
+        newt->next = q->head;
     }
-    q->tail = newt;
     q->size++;
 
     return true;
@@ -136,20 +144,24 @@ bool q_insert_tail(queue_t *q, char *s)
 bool q_remove_head(queue_t *q, char *sp, size_t bufsize)
 {
     /* You need to fix up this code. */
-    if (q == NULL || q_size(q) == 0) {
+    if (q == NULL || q->size == 0) {
         return false;
     }
-    int copy_len = bufsize / sizeof(char) - 1;
     list_ele_t *tmp = q->head;
-    q->head = q->head->next;
+    if (q->size == 1) {
+        q->head = NULL;
+    } else if (q->size > 1) {
+        q->head->prev->next = q->head->next;
+        q->head->next->prev = q->head->prev;
+        q->head = q->head->next;
+    }
     q->size--;
+    int copy_len = bufsize / sizeof(char) - 1;
     if (sp != NULL) {
         memcpy(sp, tmp->value, copy_len);
         sp[copy_len] = '\0';
     }
     free(tmp);
-    if (q->size == 0)
-        q->tail = NULL;
     return true;
 }
 
@@ -177,19 +189,19 @@ int q_size(queue_t *q)
 void q_reverse(queue_t *q)
 {
     /* You need to write the code for this function */
-    if (q == NULL) {
+    if (q == NULL || q->size == 0) {
         return;
     }
-    list_ele_t *next, *curr, *prev;
-    next = NULL;
-    curr = q->head;
-    prev = NULL;
-    q->tail = q->head;
-    while (curr != NULL) {
+    list_ele_t *tail = q->head->prev;
+    list_ele_t *curr = q->head;
+    list_ele_t *next;
+    do {
+        list_ele_t *tmp = curr->next;
         next = curr->next;
-        curr->next = prev;
-        prev = curr;
-        curr = next;
-    }
-    q->head = prev;
+        curr->next = curr->prev;
+        curr->prev = next;
+        curr = tmp;
+    } while (curr != tail);
+
+    q->head = tail;
 }
